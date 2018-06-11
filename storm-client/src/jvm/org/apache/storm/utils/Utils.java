@@ -65,6 +65,7 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.security.auth.Subject;
+import org.apache.commons.lang.StringUtils;
 import org.apache.storm.Config;
 import org.apache.storm.blobstore.BlobStore;
 import org.apache.storm.blobstore.ClientBlobStore;
@@ -117,6 +118,7 @@ public class Utils {
     // tests by subclassing.
     private static Utils _instance = new Utils();
     private static String memoizedLocalHostnameString = null;
+    public static final Pattern TOPOLOGY_KEY_PATTERN = Pattern.compile("^[\\w \\t\\._-]+$", Pattern.UNICODE_CHARACTER_CLASS);
 
     static {
         localConf = readStormConfig();
@@ -1147,6 +1149,20 @@ public class Utils {
                 }
             }
         }
+    }
+
+    /**
+     * Validates topology name / blob key.
+     *
+     * @param key topology name / Key for the blob.
+     */
+    public static final boolean isValidKey(String key) {
+        if (StringUtils.isEmpty(key) || "..".equals(key) || ".".equals(key) || !TOPOLOGY_KEY_PATTERN.matcher(key).matches()) {
+            LOG.error("'{}' does not appear to be valid. It must match {}. And it can't be \".\", \"..\", null or empty string.", key,
+                    TOPOLOGY_KEY_PATTERN);
+            return false;
+        }
+        return true;
     }
 
     /**
